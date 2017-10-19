@@ -36,18 +36,35 @@ def vectorize(tokenized_train_data):
 
 def recognize_service(data):
     jpype.attachThreadToJVM()
-    preprocessed_text = str(data["text"])
+    text = str(data["text"])
+    preprocessed_text = text
 
     entityMap = {}
 
     for key in standard_language_dictionary.keys():
         preprocessed_text = preprocessed_text.replace(key, standard_language_dictionary[key])
 
+    """
     for key in entity_dictionary.keys():
         if (preprocessed_text.find(key)  != -1):
             if entityMap.get(entity_dictionary[key]) == None:
                 entityMap[entity_dictionary[key]] = []
             entityMap[entity_dictionary[key]].append(key)
+    """
+
+    """
+    for key in entity_dictionary.keys():
+        for match in re.finditer(key, preprocessed_text):
+            if entityMap.get(entity_dictionary[key]) == None:
+                entityMap[entity_dictionary[key]] = []
+            entityMap[entity_dictionary[key]].append({"value":key, "index":match.start()})
+    """
+
+    for key in standard_language_dictionary.keys():
+        for match in re.finditer(key, text):
+            if entityMap.get(entity_dictionary[standard_language_dictionary[key]]) == None:
+                entityMap[entity_dictionary[standard_language_dictionary[key]]] = []
+            entityMap[entity_dictionary[standard_language_dictionary[key]]].append({"value":standard_language_dictionary[key], "start":match.start(), "end":match.end()})
 
     for number in re.findall("\d+", preprocessed_text):
         if entityMap.get("숫자") == None:
