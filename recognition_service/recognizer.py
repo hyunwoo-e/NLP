@@ -121,6 +121,10 @@ def recognize_service(data):
 
     vectorized_text = vect.transform([tokenize(entity_labeled_text)]).toarray()
 
+    print(mlp.predict_proba(vectorized_text))
+    print(lreg.predict_proba(vectorized_text))
+    print(neigh.predict_proba(vectorized_text))
+
     response = {}
     response["query"] = preprocessed_text
     response["intent"] = {}
@@ -161,11 +165,11 @@ train_y = train_y + ["None", "None", "None", "None", "None", "None", "None", "No
 mlp = MLPClassifier(solver='lbfgs', alpha=0.0025, hidden_layer_sizes=(5, 5), random_state=1234)
 mlp.fit(train_x, train_y)
 
-#lreg = LogisticRegression(random_state=1234)
-#lreg.fit(train_x, train_y)
+lreg = LogisticRegression(random_state=1234)
+lreg.fit(train_x, train_y)
 
-#neigh = KNeighborsClassifier(n_neighbors=1)
-#neigh.fit(train_x, train_y)
+neigh = KNeighborsClassifier(n_neighbors=1)
+neigh.fit(train_x, train_y)
 
 standard_language_data = read_data('standard_language_data.txt')
 standard_language_dictionary = {}
