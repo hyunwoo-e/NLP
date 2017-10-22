@@ -37,48 +37,92 @@ def vectorize(tokenized_train_data):
 def recognize_service(data):
     jpype.attachThreadToJVM()
     text = str(data["text"])
-    preprocessed_text = text
-
+    preprocessed_text = text + " "
     entityMap = {}
 
     for key in standard_language_dictionary.keys():
         preprocessed_text = preprocessed_text.replace(key, standard_language_dictionary[key])
 
-    """
-    for key in entity_dictionary.keys():
-        if (preprocessed_text.find(key)  != -1):
-            if entityMap.get(entity_dictionary[key]) == None:
-                entityMap[entity_dictionary[key]] = []
-            entityMap[entity_dictionary[key]].append(key)
-    """
 
     """
-    for key in entity_dictionary.keys():
-        for match in re.finditer(key, preprocessed_text):
-            if entityMap.get(entity_dictionary[key]) == None:
-                entityMap[entity_dictionary[key]] = []
-            entityMap[entity_dictionary[key]].append({"value":key, "index":match.start()})
-    """
-
     for key in standard_language_dictionary.keys():
         for match in re.finditer(key, text):
             if entityMap.get(entity_dictionary[standard_language_dictionary[key]]) == None:
                 entityMap[entity_dictionary[standard_language_dictionary[key]]] = []
             entityMap[entity_dictionary[standard_language_dictionary[key]]].append({"value":standard_language_dictionary[key], "start":match.start(), "end":match.end()})
 
-    for number in re.findall("\d+", preprocessed_text):
+    for key in entity_dictionary.keys():
+        for match in re.finditer(key, text):
+            if entityMap.get(entity_dictionary[key]) == None:
+                entityMap[entity_dictionary[key]] = []
+            entityMap[entity_dictionary[key]].append({"value":key, "start":match.start(), "end":match.end()})
+
+    for match in re.finditer("\d+", text):
         if entityMap.get("숫자") == None:
             entityMap["숫자"] = []
-            entityMap["숫자"].append(number)
+        entityMap["숫자"].append({"value": match.group(), "start": match.start(), "end": match.end()})
+    """
+
+    for key in entity_dictionary.keys():
+        for match in re.finditer(key, preprocessed_text):
+            if entityMap.get(entity_dictionary[key]) == None:
+                entityMap[entity_dictionary[key]] = []
+            entityMap[entity_dictionary[key]].append({"value":key, "start":match.start(), "end":match.end()})
+
+    for match in re.finditer("\d+-\d+-\d+", preprocessed_text):
+        if entityMap.get("전화번호") == None:
+            entityMap["전화번호"] = []
+        entityMap["전화번호"].append({"value": match.group(), "start": match.start(), "end": match.end()})
+        preprocessed_text = preprocessed_text.replace(match.group(), "전화번호", 1)
+
+    for match in re.finditer("\d+년", preprocessed_text):
+        if entityMap.get("년") == None:
+            entityMap["년"] = []
+        entityMap["년"].append({"value": match.group()[:len(match.group())-1], "start": match.start(), "end": match.end()})
+        preprocessed_text = preprocessed_text.replace(match.group(), "년", 1)
+
+    for match in re.finditer("\d+월", preprocessed_text):
+        if entityMap.get("월") == None:
+            entityMap["월"] = []
+        entityMap["월"].append({"value": match.group()[:len(match.group())-1], "start": match.start(), "end": match.end()})
+        preprocessed_text = preprocessed_text.replace(match.group(), "월", 1)
+
+    for match in re.finditer("\d+일", preprocessed_text):
+        if entityMap.get("일") == None:
+            entityMap["일"] = []
+        entityMap["일"].append({"value": match.group()[:len(match.group())-1], "start": match.start(), "end": match.end()})
+        preprocessed_text = preprocessed_text.replace(match.group(), "일", 1)
+
+    for match in re.finditer("\d+", preprocessed_text):
+        if entityMap.get("숫자") == None:
+            entityMap["숫자"] = []
+        entityMap["숫자"].append({"value": match.group(), "start": match.start(), "end": match.end()})
+        preprocessed_text = preprocessed_text.replace(match.group(), "숫자", 1)
+
+    for key in entity_dictionary.keys():
+        for match in re.finditer(key+"[가-힣]*"+"[에서|출발] ", preprocessed_text):
+            if entityMap.get("출발지") == None:
+                entityMap["출발지"] = []
+            entityMap["출발지"].append({"value": key, "start": match.start(), "end": match.end()})
+
+    for key in entity_dictionary.keys():
+        for match in re.finditer(key+"[가-힣]*"+"[에|로|으로|가는|행|도착] ", preprocessed_text):
+            if entityMap.get("목적지") == None:
+                entityMap["목적지"] = []
+            entityMap["목적지"].append({"value": key, "start": match.start(), "end": match.end()})
 
     entities = []
     for key in entityMap.keys():
         entities.append({"entity":key, "values":entityMap.get(key)})
 
-    vectorized_text = vect.transform([tokenize(preprocessed_text)]).toarray()
+    entity_labeled_text = preprocessed_text
+    for key in entity_dictionary.keys():
+        entity_labeled_text = entity_labeled_text.replace(key, entity_dictionary[key])
+
+    vectorized_text = vect.transform([tokenize(entity_labeled_text)]).toarray()
 
     response = {}
-    response["query"] = data["text"]
+    response["query"] = preprocessed_text
     response["intent"] = {}
     response["intent"]["intent"] = mlp.predict(vectorized_text)[0]
     response["intent"]["score"] = max(mlp.predict_proba(vectorized_text)[0])
