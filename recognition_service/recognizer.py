@@ -26,6 +26,7 @@ def tokenize(sentence):
                 tokenized_text += token[0]+ "/" +'Number' + " "
             if ((token[1] == 'Noun') or (token[1] == 'Verb') or (token[1] == 'Adjective')):
                 tokenized_text += token[0] + "/" + token[1] + " "
+            print(tokenized_text)
     return tokenized_text[:tokenized_text.__len__() - 1]
 
 
@@ -40,28 +41,10 @@ def recognize_service(data):
     preprocessed_text = text + " "
     entityMap = {}
 
+    #print(preprocessed_text)
     for key in standard_language_dictionary.keys():
         preprocessed_text = preprocessed_text.replace(key, standard_language_dictionary[key])
-
-
-    """
-    for key in standard_language_dictionary.keys():
-        for match in re.finditer(key, text):
-            if entityMap.get(entity_dictionary[standard_language_dictionary[key]]) == None:
-                entityMap[entity_dictionary[standard_language_dictionary[key]]] = []
-            entityMap[entity_dictionary[standard_language_dictionary[key]]].append({"value":standard_language_dictionary[key], "start":match.start(), "end":match.end()})
-
-    for key in entity_dictionary.keys():
-        for match in re.finditer(key, text):
-            if entityMap.get(entity_dictionary[key]) == None:
-                entityMap[entity_dictionary[key]] = []
-            entityMap[entity_dictionary[key]].append({"value":key, "start":match.start(), "end":match.end()})
-
-    for match in re.finditer("\d+", text):
-        if entityMap.get("숫자") == None:
-            entityMap["숫자"] = []
-        entityMap["숫자"].append({"value": match.group(), "start": match.start(), "end": match.end()})
-    """
+    #print(preprocessed_text)
 
     for key in entity_dictionary.keys():
         for match in re.finditer(key, preprocessed_text):
@@ -69,29 +52,64 @@ def recognize_service(data):
                 entityMap[entity_dictionary[key]] = []
             entityMap[entity_dictionary[key]].append({"value":key, "start":match.start(), "end":match.end()})
 
-    for match in re.finditer("\d+-\d+-\d+", preprocessed_text):
+    for key in entity_dictionary.keys():
+        preprocessed_text = preprocessed_text.replace(key, entity_dictionary[key])
+
+    for match in re.finditer("\d{3,4}-\d{3,4}-\d{4}", preprocessed_text):
         if entityMap.get("전화번호") == None:
             entityMap["전화번호"] = []
         entityMap["전화번호"].append({"value": match.group(), "start": match.start(), "end": match.end()})
         preprocessed_text = preprocessed_text.replace(match.group(), "전화번호", 1)
 
-    for match in re.finditer("\d+년", preprocessed_text):
-        if entityMap.get("년") == None:
-            entityMap["년"] = []
-        entityMap["년"].append({"value": match.group()[:len(match.group())-1], "start": match.start(), "end": match.end()})
-        preprocessed_text = preprocessed_text.replace(match.group(), "년", 1)
+    for match in re.finditer("(\d{4})-(\d{1,2})-(\d{1,2})", preprocessed_text):
+        if entityMap.get("날짜") == None:
+            entityMap["날짜"] = []
+        entityMap["날짜"].append({"value": match.group(1)+"년", "start": match.start(1), "end": match.end(1)})
+        entityMap["날짜"].append({"value": match.group(2)+"월", "start": match.start(2), "end": match.end(2)})
+        entityMap["날짜"].append({"value": match.group(3)+"일", "start": match.start(3), "end": match.end(3)})
+        preprocessed_text = preprocessed_text.replace(match.group(), "날짜", 1)
 
-    for match in re.finditer("\d+월", preprocessed_text):
-        if entityMap.get("월") == None:
-            entityMap["월"] = []
-        entityMap["월"].append({"value": match.group()[:len(match.group())-1], "start": match.start(), "end": match.end()})
-        preprocessed_text = preprocessed_text.replace(match.group(), "월", 1)
+    for match in re.finditer("(\d{4}년)[ ]*(\d{1,2}월)[ ]*(\d{1,2}일)", preprocessed_text):
+        if entityMap.get("날짜") == None:
+            entityMap["날짜"] = []
+        entityMap["날짜"].append({"value": match.group(1), "start": match.start(1), "end": match.end(1)})
+        entityMap["날짜"].append({"value": match.group(2), "start": match.start(2), "end": match.end(2)})
+        entityMap["날짜"].append({"value": match.group(3), "start": match.start(3), "end": match.end(3)})
+        preprocessed_text = preprocessed_text.replace(match.group(), "날짜", 1)
 
-    for match in re.finditer("\d+일", preprocessed_text):
-        if entityMap.get("일") == None:
-            entityMap["일"] = []
-        entityMap["일"].append({"value": match.group()[:len(match.group())-1], "start": match.start(), "end": match.end()})
-        preprocessed_text = preprocessed_text.replace(match.group(), "일", 1)
+    for match in re.finditer("(\d{1,2}월)[ ]*(\d{1,2}일)", preprocessed_text):
+        if entityMap.get("날짜") == None:
+            entityMap["날짜"] = []
+        entityMap["날짜"].append({"value": match.group(1), "start": match.start(1), "end": match.end(1)})
+        entityMap["날짜"].append({"value": match.group(2), "start": match.start(2), "end": match.end(2)})
+        entityMap["날짜"].append({"value": match.group(3), "start": match.start(3), "end": match.end(3)})
+        preprocessed_text = preprocessed_text.replace(match.group(), "날짜", 1)
+
+    for match in re.finditer("(\d{4}년)[ ]*(\d{1,2}월)[ ]*", preprocessed_text):
+        if entityMap.get("날짜") == None:
+            entityMap["날짜"] = []
+        entityMap["날짜"].append({"value": match.group(1), "start": match.start(1), "end": match.end(1)})
+        entityMap["날짜"].append({"value": match.group(2), "start": match.start(2), "end": match.end(2)})
+        entityMap["날짜"].append({"value": match.group(3), "start": match.start(3), "end": match.end(3)})
+        preprocessed_text = preprocessed_text.replace(match.group(), "날짜", 1)
+
+    for match in re.finditer("\d{4}년", preprocessed_text):
+        if entityMap.get("날짜") == None:
+            entityMap["날짜"] = []
+        entityMap["날짜"].append({"value": match.group()[:len(match.group())-1]+"년", "start": match.start(), "end": match.end()})
+        preprocessed_text = preprocessed_text.replace(match.group(), "날짜", 1)
+
+    for match in re.finditer("\d{1,2}월", preprocessed_text):
+        if entityMap.get("날짜") == None:
+            entityMap["날짜"] = []
+        entityMap["날짜"].append({"value": match.group()[:len(match.group())-1]+"월", "start": match.start(), "end": match.end()})
+        preprocessed_text = preprocessed_text.replace(match.group(), "날짜", 1)
+
+    for match in re.finditer("\d{1,2}일", preprocessed_text):
+        if entityMap.get("날짜") == None:
+            entityMap["날짜"] = []
+        entityMap["날짜"].append({"value": match.group()[:len(match.group())-1]+"일", "start": match.start(), "end": match.end()})
+        preprocessed_text = preprocessed_text.replace(match.group(), "날짜", 1)
 
     for match in re.finditer("\d+", preprocessed_text):
         if entityMap.get("숫자") == None:
@@ -110,29 +128,41 @@ def recognize_service(data):
             if entityMap.get("목적지") == None:
                 entityMap["목적지"] = []
             entityMap["목적지"].append({"value": key, "start": match.start(), "end": match.end()})
+    #print(preprocessed_text)
 
     entities = []
     for key in entityMap.keys():
         entities.append({"entity":key, "values":entityMap.get(key)})
 
     entity_labeled_text = preprocessed_text
+    '''
+    entity_labeled_text = preprocessed_text
+    print(entity_labeled_text)
     for key in entity_dictionary.keys():
         entity_labeled_text = entity_labeled_text.replace(key, entity_dictionary[key])
+    print(entity_labeled_text)
+    '''
 
+    print(entity_labeled_text)
+    print(tokenize(entity_labeled_text))
     vectorized_text = vect.transform([tokenize(entity_labeled_text)]).toarray()
+    print(vectorized_text)
 
-    print(mlp.predict_proba(vectorized_text))
-    print(lreg.predict_proba(vectorized_text))
-    print(neigh.predict_proba(vectorized_text))
+    print(mlp.predict(vectorized_text)[0])
+    print(lreg.predict(vectorized_text)[0])
+    print(neigh.predict(vectorized_text)[0])
 
     response = {}
-    response["query"] = preprocessed_text
+    response["query"] = text
+    response["preprocessed_query"] = preprocessed_text
     response["intent"] = {}
     response["intent"]["intent"] = mlp.predict(vectorized_text)[0]
     response["intent"]["score"] = max(mlp.predict_proba(vectorized_text)[0])
     response["entities"] = entities
 
+    print(response)
     return response
+
 
 
 
@@ -162,8 +192,18 @@ nones = [
 train_x = train_x + nones
 train_y = train_y + ["None", "None", "None", "None", "None", "None", "None", "None"]
 
-mlp = MLPClassifier(solver='lbfgs', alpha=0.0025, hidden_layer_sizes=(5, 5), random_state=1234)
+mlp = MLPClassifier(solver='lbfgs', alpha=0.002, hidden_layer_sizes=(10, 10), random_state=1234)
 mlp.fit(train_x, train_y)
+
+mlp_train_x = train_x.copy()
+mlp_train_x.append(train_x[0])
+mlp_train_x.append(train_x[0])
+mlp_train_x.append(train_x[0])
+mlp_train_y = train_y.copy()
+mlp_train_y.append(train_y[0])
+mlp_train_y.append(train_y[0])
+mlp_train_y.append(train_y[0])
+mlp.fit(mlp_train_x, mlp_train_y)
 
 lreg = LogisticRegression(random_state=1234)
 lreg.fit(train_x, train_y)
@@ -184,5 +224,3 @@ entity_dictionary = {}
 for row in entity_data:
     for word in row[1].split(','):
         entity_dictionary[word] = row[0]
-
-#vectorized_text = vect.transform([tokenize("건대입구 123 날짜 시간표")]).toarray()
