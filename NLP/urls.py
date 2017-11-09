@@ -16,6 +16,7 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 from recognition_service.views import *
+from generation_service.views import *
 
 
 urlpatterns = [
@@ -23,6 +24,9 @@ urlpatterns = [
     #url(r'rest-swagger/', include('rest_framework_swagger.urls')),
     url(r'^admin', include(admin.site.urls)),
 
-    # intent
+    # recognition
     url(r'^recognize', RecognitionAPI.as_view()),
+
+    # generation
+    url(r'^generate', GenerationAPI.as_view()),
 ]

@@ -26,7 +26,7 @@ def tokenize(sentence):
                 tokenized_text += token[0]+ "/" +'Number' + " "
             if ((token[1] == 'Noun') or (token[1] == 'Verb') or (token[1] == 'Adjective')):
                 tokenized_text += token[0] + "/" + token[1] + " "
-            print(tokenized_text)
+            #print(tokenized_text)
     return tokenized_text[:tokenized_text.__len__() - 1]
 
 
@@ -199,7 +199,11 @@ mlp_train_x = train_x.copy()
 mlp_train_x.append(train_x[0])
 mlp_train_x.append(train_x[0])
 mlp_train_x.append(train_x[0])
+mlp_train_x.append(train_x[0])
+mlp_train_x.append(train_x[0])
 mlp_train_y = train_y.copy()
+mlp_train_y.append(train_y[0])
+mlp_train_y.append(train_y[0])
 mlp_train_y.append(train_y[0])
 mlp_train_y.append(train_y[0])
 mlp_train_y.append(train_y[0])
